@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Лапа помощи — каталог питомцев{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <img class="hero__image" src="{% static 'images/hero.svg' %}" alt="Иллюстрация: зелёный силуэт питомца" width="834" height="545">
+    <h1 class="hero__title">Поможем найти пушистых друзей</h1>
+</section>
+
+<section class="search" aria-label="Поиск по каталогу">
+    <form class="search__form" role="search" method="get" action="{% url 'index' %}">
+        <svg class="search__icon" width="40" height="40" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false">
+            <circle cx="17" cy="17" r="12"/>
+            <path d="M26 26l9 9" stroke-linecap="round"/>
+        </svg>
+        <label class="visually-hidden" for="search-q">Поиск питомца</label>
+        <input class="search__input" id="search-q" type="search" name="q" placeholder="Поиск...">
+    </form>
+</section>
+
+<section class="catalog" aria-labelledby="catalog-title">
+    <h2 class="visually-hidden" id="catalog-title">Питомцы приюта</h2>
+    <ul class="catalog__grid">
+        {% for pet in pets %}
+        <li>
+            <article class="pet-card" tabindex="0">
+                <div class="pet-card__bar">
+                    <h3 class="pet-card__name">имя питомца</h3>
+                    <p class="pet-card__meta">тип</p>
+                    <p class="pet-card__meta">статус</p>
+                </div>
+            </article>
+        </li>
+        {% endfor %}
+    </ul>
+    <button class="btn" type="button">загрузить ещё</button>
+</section>
+{% endblock %}

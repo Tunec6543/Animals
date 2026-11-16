@@ -1,0 +1,57 @@
+{% load static %}<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Лапа помощи{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500&amp;display=swap">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    {% with current=request.resolver_match.url_name %}
+    <header class="site-header container">
+        <nav class="main-nav" aria-label="Основное меню">
+            <ul class="main-nav__list">
+                <li><a class="main-nav__link{% if current == 'index' %} is-active{% endif %}" href="{% url 'index' %}"{% if current == 'index' %} aria-current="page"{% endif %}>Главная</a></li>
+                {% if user.is_authenticated %}
+                <li><a class="main-nav__link{% if current == 'profile' %} is-active{% endif %}" href="{% url 'profile' %}"{% if current == 'profile' %} aria-current="page"{% endif %}>Профиль</a></li>
+                <li>
+                    <form class="main-nav__form" method="post" action="{% url 'logout' %}">
+                        {% csrf_token %}
+                        <button class="main-nav__link" type="submit">Выйти</button>
+                    </form>
+                </li>
+                {% else %}
+                <li><a class="main-nav__link{% if current == 'register' %} is-active{% endif %}" href="{% url 'register' %}"{% if current == 'register' %} aria-current="page"{% endif %}>Регистрация</a></li>
+                <li><a class="main-nav__link{% if current == 'login' %} is-active{% endif %}" href="{% url 'login' %}"{% if current == 'login' %} aria-current="page"{% endif %}>Войти</a></li>
+                {% endif %}
+                <li><a class="main-nav__link{% if current == 'about' %} is-active{% endif %}" href="{% url 'about' %}"{% if current == 'about' %} aria-current="page"{% endif %}>О нас</a></li>
+                <li><a class="main-nav__link{% if current == 'donate' %} is-active{% endif %}" href="{% url 'donate' %}"{% if current == 'donate' %} aria-current="page"{% endif %}>Поддержать</a></li>
+                <li><a class="main-nav__link{% if current == 'staff' %} is-active{% endif %}" href="{% url 'staff' %}"{% if current == 'staff' %} aria-current="page"{% endif %}>Сотрудникам</a></li>
+            </ul>
+        </nav>
+    </header>
+    {% endwith %}
+
+    <main class="container">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="site-footer container">
+        <section class="site-footer__col" aria-labelledby="footer-social">
+            <h2 class="site-footer__title" id="footer-social">соцсети:</h2>
+            <ul class="social">
+                <li><a class="social__link social__link--telegram" href="#" aria-label="Telegram"></a></li>
+                <li><a class="social__link social__link--whatsapp" href="#" aria-label="WhatsApp"></a></li>
+                <li><a class="social__link social__link--gradient" href="#" aria-label="ВКонтакте"></a></li>
+            </ul>
+        </section>
+        <section class="site-footer__col site-footer__col--phone" aria-labelledby="footer-phone">
+            <h2 class="site-footer__title" id="footer-phone">телефон:</h2>
+            <a class="site-footer__phone" href="tel:+79000000000">+7 900 000-00-00</a>
+        </section>
+    </footer>
+</body>
+</html>

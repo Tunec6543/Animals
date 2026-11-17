@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ pet.name }} — Лапа помощи{% endblock %}
+
+{% block content %}
+<section class="pet" aria-labelledby="pet-title">
+    <div class="pet__top">
+        <div class="pet__photo">
+            {% if pet.photo %}
+            <img src="{{ pet.photo.url }}" alt="{{ pet.name }}, {{ pet.get_species_display|lower }}" width="585" height="481">
+            {% else %}
+            <span class="pet__no-photo">нет фото</span>
+            {% endif %}
+        </div>
+        <div class="pet__panel">
+            <h1 class="pet__title" id="pet-title">{{ pet.name }}</h1>
+            <dl class="pet__facts">
+                <div><dt>Тип:</dt> <dd>{{ pet.get_species_display }}{% if pet.breed %}, {{ pet.breed }}{% endif %}</dd></div>
+                <div><dt>Пол:</dt> <dd>{{ pet.get_gender_display }}</dd></div>
+                <div><dt>Возраст, лет:</dt> <dd>{{ pet.age }}</dd></div>
+                <div><dt>Статус:</dt> <dd>{{ pet.get_status_display }}</dd></div>
+                <div><dt>В приюте с:</dt> <dd>{{ pet.admission_date|date:"d.m.Y" }}</dd></div>
+                {% if vet_card %}
+                <div><dt>Осмотр:</dt> <dd>{{ vet_card.last_checkup|date:"d.m.Y" }}</dd></div>
+                {% endif %}
+                {% if pet.volier %}
+                <div><dt>Вольер:</dt> <dd>№{{ pet.volier.number }}, {{ pet.volier.sector }}</dd></div>
+                {% endif %}
+                {% if total %}
+                <div><dt>Собрано опекунами:</dt> <dd>{{ total|floatformat:2 }} ₽</dd></div>
+                {% endif %}
+            </dl>
+        </div>
+    </div>
+
+    <div class="pet__info">
+        <h2 class="pet__subtitle">Информация</h2>
+        {% if pet.description %}<p>{{ pet.description }}</p>{% endif %}
+        {% if vet_card %}
+        <p>Прививки и обработки: {{ vet_card.vaccinations }}</p>
+        {% if vet_card.diagnosis %}<p>Особенности: {{ vet_card.diagnosis }}</p>{% endif %}
+        {% endif %}
+    </div>
+
+    {% if pet.status == 'available' %}
+    <div class="pet__actions">
+        <a class="btn btn--green" href="{% url 'walk_book' pet.pk %}">Организовать прогулку</a>
+        <a class="btn btn--black" href="{% url 'adopt' pet.pk %}">Заключить договор</a>
+    </div>
+    {% endif %}
+</section>
+{% endblock %}

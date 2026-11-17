@@ -1,3 +1,12 @@
+/* ==========================================================
+   Лапа помощи — стили сайта
+   Разделы: 1 Переменные · 2 База · 3 Каркас · 4 Шапка и меню ·
+   5 Главный блок · 6 Поиск · 7 Каталог и карточки · 8 Пагинация ·
+   9 Кнопки · 10 Страница питомца · 11 Формы · 12 Профиль и
+   служебные страницы · 13 Подвал · 14 Адаптив
+   ========================================================== */
+
+/* ===== 1. Переменные из UI-kit ===== */
 :root {
     --color-bg: #f4f4f4;
     --color-white: #ffffff;
@@ -9,11 +18,13 @@
     --color-whatsapp: #00ff37;
     --color-blue: #2461e4;
     --color-purple: #8c15b7;
+    --color-error: #b00020;
 
     --radius: 20px;
     --gap-section: 35px;
     --gutter: 14px;
     --container: 1340px;
+    --tap: 44px;
 
     --font: "Golos Text", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
     --fs-h1: 40px;
@@ -22,7 +33,7 @@
     --fs-text: 20px;
 }
 
-
+/* ===== 2. База ===== */
 *,
 *::before,
 *::after {
@@ -53,7 +64,9 @@ ul {
 h1,
 h2,
 h3,
-p {
+p,
+dl,
+dd {
     margin: 0;
 }
 
@@ -78,6 +91,7 @@ a {
     border: 0;
 }
 
+/* ===== 3. Каркас ===== */
 .container {
     width: min(var(--container), 100% - 2 * var(--gutter));
     margin-inline: auto;
@@ -90,7 +104,7 @@ main {
     margin-block: var(--gap-section);
 }
 
-/* ===== Шапка и меню ===== */
+/* ===== 4. Шапка и меню ===== */
 .site-header {
     margin-top: 30px;
     padding: 47px 20px;
@@ -110,7 +124,7 @@ main {
 .main-nav__form button {
     display: inline-flex;
     align-items: center;
-    min-height: 44px;
+    min-height: var(--tap);
     padding: 5px 18px;
     border: 0;
     border-radius: 22px;
@@ -131,7 +145,27 @@ main {
     margin: 0;
 }
 
-/* ===== Главный блок ===== */
+.burger {
+    display: none;
+    width: var(--tap);
+    height: var(--tap);
+    margin-left: auto;
+    padding: 10px;
+    border: 0;
+    border-radius: 12px;
+    background: transparent;
+    cursor: pointer;
+}
+
+.burger__line {
+    display: block;
+    height: 3px;
+    margin: 5px 0;
+    background: var(--color-white);
+    border-radius: 2px;
+}
+
+/* ===== 5. Главный блок ===== */
 .hero {
     display: flex;
     align-items: center;
@@ -151,7 +185,7 @@ main {
     font-weight: 400;
 }
 
-/* ===== Поиск ===== */
+/* ===== 6. Поиск ===== */
 .search__form {
     display: flex;
     align-items: center;
@@ -170,7 +204,7 @@ main {
 .search__input {
     flex: 1;
     min-width: 0;
-    min-height: 44px;
+    min-height: var(--tap);
     padding: 0;
     border: 0;
     background: transparent;
@@ -187,15 +221,41 @@ main {
     outline-offset: 2px;
 }
 
-/* ===== Каталог ===== */
+.search__submit {
+    min-height: var(--tap);
+    padding: 0 20px;
+    border: 0;
+    border-radius: 14px;
+    background: var(--color-black);
+    color: var(--color-white);
+    font: inherit;
+    cursor: pointer;
+}
+
+.search__submit:hover {
+    background: var(--color-green-dark);
+}
+
+/* ===== 7. Каталог и карточки ===== */
 .catalog {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 60px;
+    gap: 40px;
     padding: 40px 20px;
     background: var(--color-white);
     border-radius: var(--radius);
+}
+
+.catalog__title {
+    align-self: flex-start;
+    font-size: var(--fs-h1);
+    font-weight: 400;
+}
+
+.catalog__count,
+.catalog__empty {
+    align-self: flex-start;
 }
 
 .catalog__grid {
@@ -212,6 +272,22 @@ main {
     aspect-ratio: 220 / 254;
     background: var(--color-bg);
     border-radius: 22px;
+}
+
+.pet-card__link {
+    display: block;
+    position: relative;
+    height: 100%;
+    color: inherit;
+    text-decoration: none;
+}
+
+.pet-card__photo {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
 .pet-card__bar {
@@ -239,31 +315,278 @@ main {
     padding: 4px 8px;
 }
 
-.pet-card:hover .pet-card__bar,
-.pet-card:focus-visible .pet-card__bar {
-    height: 52%;
+.pet-card__link:hover .pet-card__bar,
+.pet-card__link:focus-visible .pet-card__bar {
+    height: 132px;
     border-radius: var(--radius);
 }
 
-/* ===== Кнопка ===== */
+/* ===== 8. Пагинация ===== */
+.pagination__list {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+}
+
+.pagination__link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: var(--tap);
+    min-height: var(--tap);
+    padding: 0 14px;
+    border-radius: 14px;
+    background: var(--color-bg);
+    text-decoration: none;
+}
+
+a.pagination__link:hover {
+    background: var(--color-green);
+}
+
+.pagination__link.is-current {
+    background: var(--color-green-dark);
+    color: var(--color-white);
+}
+
+/* ===== 9. Кнопки ===== */
 .btn {
-    min-width: 284px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 204px;
     min-height: 60px;
     padding: 16px 40px;
     border: 0;
     border-radius: var(--radius);
     background: var(--color-green-dark);
-    color: var(--color-black);
+    color: var(--color-white);
     font: inherit;
     font-size: var(--fs-h3);
+    text-align: center;
+    text-decoration: none;
     cursor: pointer;
+}
+
+.btn--green {
+    background: var(--color-green-dark);
+}
+
+.btn--black {
+    background: var(--color-black);
 }
 
 .btn:hover {
     background: var(--color-brown);
 }
 
-/* ===== Подвал ===== */
+/* ===== 10. Страница питомца ===== */
+.pet {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-section);
+}
+
+.pet__top {
+    display: flex;
+    gap: 39px;
+}
+
+.pet__photo {
+    flex: 0 1 585px;
+    min-width: 0;
+    aspect-ratio: 585 / 481;
+    overflow: hidden;
+    background: var(--color-black);
+    border-radius: var(--radius);
+    color: var(--color-white);
+}
+
+.pet__photo img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.pet__no-photo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    font-size: var(--fs-h2);
+}
+
+.pet__panel {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 34px 30px;
+    background: var(--color-white);
+    border-radius: var(--radius);
+}
+
+.pet__title {
+    margin-bottom: 16px;
+    font-size: var(--fs-h1);
+    font-weight: 400;
+}
+
+.pet__facts {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    font-size: var(--fs-h3);
+}
+
+.pet__facts dt,
+.pet__facts dd,
+.profile__facts dt,
+.profile__facts dd {
+    display: inline;
+}
+
+.pet__info {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 0 5px;
+}
+
+.pet__subtitle {
+    font-size: var(--fs-h2);
+    font-weight: 400;
+}
+
+.pet__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px 40px;
+}
+
+.pet__actions .btn {
+    flex: 0 1 528px;
+    min-height: 151px;
+}
+
+/* ===== 11. Формы ===== */
+.auth {
+    width: min(594px, 100%);
+    margin-inline: auto;
+    padding: 40px 30px;
+    background: var(--color-white);
+    border-radius: var(--radius);
+}
+
+.auth__title {
+    margin-bottom: 24px;
+    font-size: var(--fs-h1);
+    font-weight: 400;
+    text-align: center;
+}
+
+.auth__form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.auth__form .btn {
+    min-height: 70px;
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.field__input {
+    width: 100%;
+    min-height: 56px;
+    padding: 0 20px;
+    border: 1px solid var(--color-black);
+    border-radius: var(--radius);
+    background: var(--color-white);
+    font: inherit;
+    font-size: var(--fs-text);
+}
+
+.field__error,
+.form-errors {
+    color: var(--color-error);
+    font-size: 16px;
+}
+
+/* ===== 12. Профиль и служебные страницы ===== */
+.profile,
+.page-block {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    min-height: 400px;
+    padding: 40px 20px;
+    background: var(--color-white);
+    border-radius: var(--radius);
+}
+
+.profile__title,
+.page-block__title {
+    font-size: var(--fs-h1);
+    font-weight: 400;
+}
+
+.profile__subtitle {
+    margin-top: 10px;
+    font-size: var(--fs-h2);
+    font-weight: 400;
+}
+
+.profile__facts {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.profile__list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.profile__item {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 24px;
+    padding: 14px 20px;
+    background: var(--color-bg);
+    border-radius: var(--radius);
+}
+
+.profile__item a {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--tap);
+}
+
+.page-block--center {
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.page-block__code {
+    font-size: 128px;
+    font-weight: 400;
+    line-height: 1;
+}
+
+.page-block__text {
+    font-size: var(--fs-h2);
+}
+
+/* ===== 13. Подвал ===== */
 .site-footer {
     display: flex;
     flex-wrap: wrap;
@@ -284,7 +607,7 @@ main {
 .site-footer__phone {
     display: inline-flex;
     align-items: center;
-    min-height: 44px;
+    min-height: var(--tap);
     text-decoration: none;
 }
 
@@ -312,23 +635,7 @@ main {
     background: linear-gradient(135deg, var(--color-blue), var(--color-purple));
 }
 
-/* ===== Служебные страницы ===== */
-.page-block {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    min-height: 400px;
-    padding: 40px 20px;
-    background: var(--color-white);
-    border-radius: var(--radius);
-}
-
-.page-block__title {
-    font-size: var(--fs-h1);
-    font-weight: 400;
-}
-
-/* ===== Адаптив ===== */
+/* ===== 14. Адаптив ===== */
 @media (max-width: 1100px) {
     .catalog__grid {
         grid-template-columns: repeat(3, minmax(0, 220px));
@@ -336,6 +643,10 @@ main {
 
     .hero {
         gap: 32px;
+    }
+
+    .pet__top {
+        gap: 20px;
     }
 }
 
@@ -346,13 +657,34 @@ main {
     }
 
     .site-header {
-        padding: 20px 14px;
+        display: flex;
+        flex-direction: column;
+        padding: 10px 14px;
+    }
+
+    .burger {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .main-nav {
+        width: 100%;
     }
 
     .main-nav__list {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
         gap: 4px 8px;
+        padding-block: 10px;
+    }
+
+    .js .main-nav__list {
+        display: none;
+    }
+
+    .js .main-nav__list.is-open {
+        display: grid;
     }
 
     .main-nav__link,
@@ -373,13 +705,20 @@ main {
 
     .hero__title {
         flex: none;
-        font-size: 32px;
+        font-size: var(--fs-h2);
         text-align: center;
     }
 
     .catalog {
-        gap: 40px;
+        gap: 28px;
         padding: 20px 14px;
+    }
+
+    .catalog__title,
+    .profile__title,
+    .page-block__title,
+    .auth__title {
+        font-size: var(--fs-h2);
     }
 
     .catalog__grid {
@@ -392,9 +731,48 @@ main {
         border-radius: 20px;
     }
 
-    .btn {
-        min-width: 204px;
-        font-size: var(--fs-h3);
+    .pet-card__link:hover .pet-card__bar,
+    .pet-card__link:focus-visible .pet-card__bar {
+        height: 108px;
+    }
+
+    .search__form {
+        gap: 4px;
+        padding: 0 8px;
+    }
+
+    .pet__top {
+        flex-direction: column;
+    }
+
+    .pet__photo {
+        flex: none;
+    }
+
+    .pet__panel {
+        padding: 20px 14px;
+    }
+
+    .pet__title {
+        font-size: var(--fs-h2);
+    }
+
+    .pet__actions .btn {
+        flex-basis: 100%;
+        min-height: 60px;
+    }
+
+    .auth {
+        padding: 24px 14px;
+    }
+
+    .profile,
+    .page-block {
+        padding: 24px 14px;
+    }
+
+    .page-block__code {
+        font-size: 96px;
     }
 
     .site-footer {

@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block title %}Вход — Лапа помощи{% endblock %}
+
+{% block content %}
+<section class="auth" aria-labelledby="auth-title">
+    <h1 class="auth__title" id="auth-title">С возвращением</h1>
+    <form class="auth__form" method="post" action="{% url 'login' %}">
+        {% csrf_token %}
+        {% include '_form_fields.html' %}
+        <input type="hidden" name="next" value="{{ next }}">
+        <button class="btn btn--black" type="submit">Войти</button>
+    </form>
+</section>
+{% endblock %}

@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block title %}Профиль — Лапа помощи{% endblock %}
+
+{% block content %}
+<section class="profile" aria-labelledby="profile-title">
+    <h1 class="profile__title" id="profile-title">Профиль</h1>
+    <dl class="profile__facts">
+        <div><dt>Логин:</dt> <dd>{{ user.username }}</dd></div>
+        {% if user.get_full_name %}<div><dt>ФИО:</dt> <dd>{{ user.get_full_name }}</dd></div>{% endif %}
+        <div><dt>Email:</dt> <dd>{{ user.email }}</dd></div>
+        <div><dt>Зарегистрирован(а):</dt> <dd>{{ user.date_joined|date:"d.m.Y" }}</dd></div>
+    </dl>
+
+    <h2 class="profile__subtitle">Заявки и договоры</h2>
+    {% if applications %}
+    <ul class="profile__list">
+        {% for application in applications %}
+        <li class="profile__item">
+            <a href="{% url 'pet_detail' application.pet.pk %}">{{ application.pet.name }}</a>
+            <span>{{ application.get_status_display }}</span>
+            <span>Подана: {{ application.created_at|date:"d.m.Y" }}</span>
+            {% if application.contract %}
+            <span>Договор от {{ application.contract.signed_date|date:"d.m.Y" }}</span>
+            {% endif %}
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p>Заявок пока нет.</p>
+    {% endif %}
+</section>
+{% endblock %}

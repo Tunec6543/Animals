@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block title %}Регистрация — Лапа помощи{% endblock %}
+
+{% block content %}
+<section class="auth" aria-labelledby="auth-title">
+    <h1 class="auth__title" id="auth-title">Регистрация</h1>
+    <form class="auth__form" method="post" action="{% url 'register' %}">
+        {% csrf_token %}
+        {% include '_form_fields.html' %}
+        <button class="btn btn--black" type="submit">Регистрация</button>
+    </form>
+</section>
+{% endblock %}

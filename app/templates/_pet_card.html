@@ -1,0 +1,12 @@
+<article class="pet-card">
+    <a class="pet-card__link" href="{% url 'pet_detail' pet.pk %}">
+        {% if pet.photo %}
+        <img class="pet-card__photo" src="{{ pet.photo.url }}" alt="{{ pet.name }}, {{ pet.get_species_display|lower }}" width="220" height="254" loading="lazy">
+        {% endif %}
+        <div class="pet-card__bar">
+            <h3 class="pet-card__name">{{ pet.name }}</h3>
+            <p class="pet-card__meta">{{ pet.get_species_display }}{% if pet.breed %}, {{ pet.breed|truncatechars:16 }}{% endif %}</p>
+            <p class="pet-card__meta">{{ pet.get_status_display }}</p>
+        </div>
+    </a>
+</article>

@@ -10,3 +10,8 @@ urlpatterns = [
     path('favicon.ico', RedirectView.as_view(url=static_url('images/favicon.svg'), permanent=True)),
     path('', include('app.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+if settings.DEBUG:
+    from debug_toolbar.toolbar import debug_toolbar_urls
+
+    urlpatterns += debug_toolbar_urls()

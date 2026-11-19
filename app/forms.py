@@ -1,3 +1,4 @@
+import logging
 from datetime import timedelta
 
 from django import forms
@@ -10,6 +11,8 @@ from django.utils import timezone
 from .models import AdoptionApplication, Pet, Profile, SponsorshipPayment, WalkingBooking
 
 User = get_user_model()
+
+logger = logging.getLogger(__name__)
 
 phone_validator = RegexValidator(
     r'^\+?[\d\s()-]{10,18}$', 'Введите телефон в формате +7 900 000-00-00.'
@@ -30,6 +33,13 @@ class LoginForm(StyledFormMixin, AuthenticationForm):
         super().__init__(*args, **kwargs)
         self.fields['username'].label = 'Логин'
         self._style_fields()
+
+    def clean(self):
+        try:
+            return super().clean()
+        except forms.ValidationError:
+            logger.warning('Неудачная попытка входа: логин=%s', self.cleaned_data.get('username'))
+            raise
 
 
 class RegisterForm(StyledFormMixin, forms.ModelForm):

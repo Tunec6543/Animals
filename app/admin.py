@@ -68,6 +68,7 @@ class AdoptionApplicationAdmin(admin.ModelAdmin):
 @admin.register(Interview)
 class InterviewAdmin(admin.ModelAdmin):
     list_display = ('application', 'curator', 'scheduled_time', 'passed')
+    list_select_related = ('application__user', 'application__pet', 'curator')
     list_filter = ('passed', 'scheduled_time')
     search_fields = ('application__user__username', 'application__pet__name')
 
@@ -93,6 +94,7 @@ class WalkingBookingAdmin(admin.ModelAdmin):
 @admin.register(AdoptionContract)
 class AdoptionContractAdmin(admin.ModelAdmin):
     list_display = ('id', 'application', 'signed_date', 'terms_agreed')
+    list_select_related = ('application__user', 'application__pet')
     list_filter = ('signed_date', 'terms_agreed')
     search_fields = ('application__user__username', 'application__pet__name')
 
@@ -114,6 +116,7 @@ class SponsorshipPaymentAdmin(admin.ModelAdmin):
 @admin.register(HomePhotoReport)
 class HomePhotoReportAdmin(admin.ModelAdmin):
     list_display = ('contract', 'report_date', 'comment')
+    list_select_related = ('contract__application__user', 'contract__application__pet')
     list_filter = ('report_date',)
     search_fields = ('comment', 'contract__application__pet__name')
 

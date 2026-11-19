@@ -53,6 +53,18 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'config.urls'
 
+if DEBUG:
+    import mimetypes
+
+    mimetypes.add_type('application/javascript', '.js', True)
+    INSTALLED_APPS += ['debug_toolbar']
+    # Toolbar middleware подключается сразу после SecurityMiddleware.
+    MIDDLEWARE.insert(
+        MIDDLEWARE.index('django.middleware.security.SecurityMiddleware') + 1,
+        'debug_toolbar.middleware.DebugToolbarMiddleware',
+    )
+    INTERNAL_IPS = ['127.0.0.1']
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -135,3 +147,35 @@ LOGOUT_REDIRECT_URL = 'index'
 MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 LOGIN_REDIRECT_URL = 'profile'
+
+LOG_DIR = BASE_DIR / 'logs'
+LOG_DIR.mkdir(exist_ok=True)
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'default': {
+            'format': '{asctime} {levelname} {name} {message}',
+            'style': '{',
+            'datefmt': '%Y-%m-%d %H:%M:%S',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'level': 'INFO',
+            'formatter': 'default',
+        },
+        'file': {
+            'class': 'logging.FileHandler',
+            'filename': LOG_DIR / 'app.log',
+            'encoding': 'utf-8',
+            'formatter': 'default',
+        },
+    },
+    'loggers': {
+        'django': {'handlers': ['console', 'file'], 'level': 'INFO'},
+        'app': {'handlers': ['console', 'file'], 'level': 'DEBUG'},
+    },
+}

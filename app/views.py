@@ -1,3 +1,5 @@
+import logging
+import time
 from functools import wraps
 
 from django.contrib import messages
@@ -15,6 +17,8 @@ from django.views.decorators.http import require_POST
 from .forms import AdoptionForm, ContactForm, DonateForm, ProfileForm, RegisterForm, WalkForm
 from .models import AdoptionApplication, Pet, Profile, SponsorshipPayment, WalkingBooking
 
+logger = logging.getLogger(__name__)
+
 PETS_PER_PAGE = 20
 
 
@@ -25,6 +29,7 @@ def _paginate(request, queryset):
 def _filter_pets(request):
     q = request.GET.get('q', '').strip()
     species = request.GET.get('species', '')
+    logger.debug('Фильтр каталога: q=%r, species=%r', q, species)
     pets = Pet.objects.all()
     if species in dict(Pet.SPECIES_CHOICES):
         pets = pets.filter(species=species)
@@ -97,6 +102,7 @@ def walk_book(request, pk):
         booking.volunteer = request.user
         booking.pet = pet
         booking.save()
+        logger.info('Запись на прогулку: пользователь=%s, питомец=%s, время=%s', request.user.username, pet.pk, booking.date_time)
         messages.success(request, f'Вы записаны на прогулку с питомцем {pet.name}.')
         return redirect('profile')
     return render(request, 'form_page.html', {
@@ -119,6 +125,7 @@ def adopt(request, pk):
         application.user = request.user
         application.pet = pet
         application.save()
+        logger.info('Заявка на усыновление: пользователь=%s, питомец=%s', request.user.username, pet.pk)
         messages.success(request, f'Заявка на питомца {pet.name} отправлена.')
         return redirect('profile')
     return render(request, 'form_page.html', {
@@ -133,8 +140,11 @@ def register(request):
     if request.method == 'POST' and form.is_valid():
         user = form.save()
         login(request, user)
+        logger.info('Зарегистрирован пользователь %s', user.username)
         messages.success(request, 'Регистрация прошла успешно.')
         return redirect('profile')
+    if request.method == 'POST':
+        logger.warning('Регистрация отклонена, поля с ошибками: %s', ', '.join(form.errors))
     return render(request, 'register.html', {'form': form})
 
 
@@ -167,6 +177,7 @@ def profile_edit(request):
 def profile_delete(request):
     if request.method == 'POST':
         user = request.user
+        logger.info('Удаление профиля пользователя %s', user.username)
         logout(request)
         user.delete()
         messages.success(request, 'Ваш профиль удалён.')
@@ -178,12 +189,20 @@ def about(request):
     form = ContactForm(request.POST or None)
     if request.method == 'POST' and form.is_valid():
         data = form.cleaned_data
-        send_mail(
-            f'Сообщение с сайта от {data["name"]}',
-            f'{data["message"]}\n\nEmail: {data["email"]}\nТелефон: {data["phone"] or "не указан"}',
-            data['email'],
-            ['shelter@example.com'],
-        )
+        logger.info('Отправка сообщения с сайта: начало')
+        started = time.monotonic()
+        try:
+            send_mail(
+                f'Сообщение с сайта от {data["name"]}',
+                f'{data["message"]}\n\nEmail: {data["email"]}\nТелефон: {data["phone"] or "не указан"}',
+                data['email'],
+                ['shelter@example.com'],
+            )
+        except Exception:
+            logger.exception('Не удалось отправить сообщение с сайта')
+            messages.error(request, 'Не удалось отправить сообщение. Попробуйте позже.')
+            return render(request, 'about.html', {'form': form})
+        logger.info('Отправка сообщения с сайта: готово за %.2f с', time.monotonic() - started)
         messages.success(request, 'Сообщение отправлено. Мы ответим на указанный email.')
         return redirect('about')
     return render(request, 'about.html', {'form': form})
@@ -198,6 +217,7 @@ def donate(request):
             payment = form.save(commit=False)
             payment.sponsor = request.user
             payment.save()
+            logger.info('Пожертвование: пользователь=%s, питомец=%s, сумма=%s', request.user.username, payment.pet.pk, payment.amount)
             messages.success(request, f'Спасибо! Взнос {payment.amount} ₽ для питомца {payment.pet.name} принят.')
             return redirect('donate')
         context['form'] = form
@@ -230,6 +250,7 @@ def staff(request):
 def staff_application(request, pk):
     application = get_object_or_404(AdoptionApplication, pk=pk, status='pending')
     action = request.POST.get('action')
+    logger.info('Сотрудник %s: действие=%s, заявка=%s', request.user.username, action, application.pk)
     if action == 'approve':
         application.status = 'approved'
         messages.success(request, f'Заявка на питомца {application.pet.name} одобрена.')
@@ -237,6 +258,7 @@ def staff_application(request, pk):
         application.status = 'rejected'
         messages.success(request, f'Заявка на питомца {application.pet.name} отклонена.')
     else:
+        logger.warning('Неизвестное действие %r для заявки %s', action, application.pk)
         messages.error(request, 'Неизвестное действие.')
         return redirect('staff')
     application.save()

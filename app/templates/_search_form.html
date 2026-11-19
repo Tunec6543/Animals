@@ -1,9 +1,16 @@
-<form class="search__form" role="search" method="get" action="{% url 'search' %}">
+<form class="search__form" role="search" method="get" action="{% url 'search' %}"{% if live %} data-live-url="{% url 'pets_api' %}"{% endif %}>
     <svg class="search__icon" width="40" height="40" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false">
         <circle cx="17" cy="17" r="12"/>
         <path d="M26 26l9 9" stroke-linecap="round"/>
     </svg>
     <label class="visually-hidden" for="search-q">Поиск питомца</label>
     <input class="search__input" id="search-q" type="search" name="q" value="{{ q|default:'' }}" placeholder="Поиск...">
+    <label class="visually-hidden" for="search-species">Вид животного</label>
+    <select class="search__select" id="search-species" name="species">
+        <option value="">Все</option>
+        {% for value, label in species_choices %}
+        <option value="{{ value }}"{% if value == species %} selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+    </select>
     <button class="search__submit" type="submit">Найти</button>
 </form>

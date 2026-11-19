@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} — Лапа помощи{% endblock %}
+
+{% block content %}
+<section class="auth" aria-labelledby="form-title">
+    <h1 class="auth__title" id="form-title">{{ title }}</h1>
+    <form class="auth__form" method="post" novalidate data-validate>
+        {% csrf_token %}
+        {% include '_form_fields.html' %}
+        <button class="btn btn--black" type="submit">{{ submit }}</button>
+    </form>
+</section>
+{% endblock %}

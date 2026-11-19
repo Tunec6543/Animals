@@ -4,30 +4,62 @@
 
 {% block content %}
 <section class="profile" aria-labelledby="profile-title">
-    <h1 class="profile__title" id="profile-title">Профиль</h1>
-    <dl class="profile__facts">
-        <div><dt>Логин:</dt> <dd>{{ user.username }}</dd></div>
-        {% if user.get_full_name %}<div><dt>ФИО:</dt> <dd>{{ user.get_full_name }}</dd></div>{% endif %}
-        <div><dt>Email:</dt> <dd>{{ user.email }}</dd></div>
-        <div><dt>Зарегистрирован(а):</dt> <dd>{{ user.date_joined|date:"d.m.Y" }}</dd></div>
-    </dl>
+    <div class="profile__avatar" aria-hidden="true">{{ user.username|slice:":1"|upper }}</div>
+    <h1 class="profile__name" id="profile-title">{{ user.get_full_name|default:user.username }}</h1>
 
-    <h2 class="profile__subtitle">Заявки и договоры</h2>
-    {% if applications %}
-    <ul class="profile__list">
-        {% for application in applications %}
-        <li class="profile__item">
-            <a href="{% url 'pet_detail' application.pet.pk %}">{{ application.pet.name }}</a>
-            <span>{{ application.get_status_display }}</span>
-            <span>Подана: {{ application.created_at|date:"d.m.Y" }}</span>
-            {% if application.contract %}
-            <span>Договор от {{ application.contract.signed_date|date:"d.m.Y" }}</span>
+    <div class="profile__card">
+        <dl class="profile__facts">
+            <div><dt>Логин:</dt> <dd>{{ user.username }}</dd></div>
+            <div><dt>Пол:</dt> <dd>{{ profile.get_gender_display|default:"не указан" }}</dd></div>
+            <div><dt>Зарегистрирован(а):</dt> <dd>{{ user.date_joined|date:"d.m.Y" }}</dd></div>
+            <div><dt>Телефон:</dt> <dd>{{ profile.phone|default:"не указан" }}</dd></div>
+            <div><dt>Email:</dt> <dd>{{ user.email|default:"не указан" }}</dd></div>
+        </dl>
+
+        <a class="profile__edit" href="{% url 'profile_edit' %}">Редактировать профиль</a>
+
+        <section class="profile__orders" aria-labelledby="orders-title">
+            <h2 class="profile__subtitle" id="orders-title">Заявки и договоры</h2>
+            {% if applications %}
+            <ul class="profile__list">
+                {% for application in applications %}
+                <li class="profile__item">
+                    <a href="{% url 'pet_detail' application.pet.pk %}">{{ application.pet.name }}</a>
+                    <span>{{ application.get_status_display }}</span>
+                    <span>Подана: {{ application.created_at|date:"d.m.Y" }}</span>
+                    {% if application.contract %}
+                    <span>Договор от {{ application.contract.signed_date|date:"d.m.Y" }}</span>
+                    {% endif %}
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p>Заявок пока нет.</p>
             {% endif %}
-        </li>
-        {% endfor %}
-    </ul>
-    {% else %}
-    <p>Заявок пока нет.</p>
-    {% endif %}
+
+            <h2 class="profile__subtitle">Записи на прогулки</h2>
+            {% if walks %}
+            <ul class="profile__list">
+                {% for walk in walks %}
+                <li class="profile__item">
+                    <a href="{% url 'pet_detail' walk.pet.pk %}">{{ walk.pet.name }}</a>
+                    <span>{{ walk.date_time|date:"d.m.Y H:i" }}</span>
+                    <span>{% if walk.is_completed %}Завершена{% else %}Запланирована{% endif %}</span>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p>Записей на прогулки пока нет.</p>
+            {% endif %}
+        </section>
+
+        <div class="profile__actions">
+            <form method="post" action="{% url 'logout' %}">
+                {% csrf_token %}
+                <button class="btn btn--green" type="submit">Выйти</button>
+            </form>
+            <a class="btn btn--black" href="{% url 'profile_delete' %}">Удалить профиль</a>
+        </div>
+    </div>
 </section>
 {% endblock %}

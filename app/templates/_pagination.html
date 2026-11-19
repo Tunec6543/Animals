@@ -2,19 +2,19 @@
 <nav class="pagination" aria-label="Страницы">
     <ul class="pagination__list">
         {% if page_obj.has_previous %}
-        <li><a class="pagination__link" href="?{% if q %}q={{ q|urlencode }}&amp;{% endif %}page={{ page_obj.previous_page_number }}">Назад</a></li>
+        <li><a class="pagination__link" href="?{% if query_string %}{{ query_string }}&amp;{% endif %}page={{ page_obj.previous_page_number }}">Назад</a></li>
         {% endif %}
         {% for n in page_obj.paginator.page_range %}
         <li>
             {% if n == page_obj.number %}
             <span class="pagination__link is-current" aria-current="page">{{ n }}</span>
             {% else %}
-            <a class="pagination__link" href="?{% if q %}q={{ q|urlencode }}&amp;{% endif %}page={{ n }}">{{ n }}</a>
+            <a class="pagination__link" href="?{% if query_string %}{{ query_string }}&amp;{% endif %}page={{ n }}">{{ n }}</a>
             {% endif %}
         </li>
         {% endfor %}
         {% if page_obj.has_next %}
-        <li><a class="pagination__link" href="?{% if q %}q={{ q|urlencode }}&amp;{% endif %}page={{ page_obj.next_page_number }}">Дальше</a></li>
+        <li><a class="pagination__link" href="?{% if query_string %}{{ query_string }}&amp;{% endif %}page={{ page_obj.next_page_number }}">Дальше</a></li>
         {% endif %}
     </ul>
 </nav>

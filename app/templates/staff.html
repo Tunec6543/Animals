@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block title %}Сотрудникам — Лапа помощи{% endblock %}
+
+{% block content %}
+<section class="page-block page-block--auto" aria-labelledby="staff-title">
+    <h1 class="page-block__title" id="staff-title">Сотрудникам</h1>
+
+    <h2 class="profile__subtitle">Заявки на рассмотрении</h2>
+    {% if applications %}
+    <ul class="staff__list">
+        {% for application in applications %}
+        <li class="staff__item">
+            <p><a href="{% url 'pet_detail' application.pet.pk %}">{{ application.pet.name }}</a> — {{ application.user.username }}{% if application.user.email %} ({{ application.user.email }}){% endif %}, подана {{ application.created_at|date:"d.m.Y" }}</p>
+            <details class="staff__details">
+                <summary>Анкета кандидата</summary>
+                <p><strong>Жилищные условия:</strong> {{ application.housing_conditions }}</p>
+                <p><strong>Опыт:</strong> {{ application.experience }}</p>
+            </details>
+            <form class="staff__actions" method="post" action="{% url 'staff_application' application.pk %}">
+                {% csrf_token %}
+                <button class="btn btn--green" type="submit" name="action" value="approve">Одобрить</button>
+                <button class="btn btn--black" type="submit" name="action" value="reject">Отклонить</button>
+            </form>
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p>Новых заявок нет.</p>
+    {% endif %}
+
+    <h2 class="profile__subtitle">Ближайшие прогулки</h2>
+    {% if walks %}
+    <ul class="profile__list">
+        {% for walk in walks %}
+        <li class="profile__item">
+            <a href="{% url 'pet_detail' walk.pet.pk %}">{{ walk.pet.name }}</a>
+            <span>{{ walk.date_time|date:"d.m.Y H:i" }}</span>
+            <span>Волонтёр: {{ walk.volunteer.username }}</span>
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p>Запланированных прогулок нет.</p>
+    {% endif %}
+</section>
+{% endblock %}

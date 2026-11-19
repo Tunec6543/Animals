@@ -1,6 +1,9 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Поиск{% if q %}: {{ q }}{% endif %} — Лапа помощи{% endblock %}
+
+{% block scripts %}<script src="{% static 'js/catalog.js' %}" defer></script>{% endblock %}
 
 {% block content %}
 <section class="search" aria-label="Поиск по каталогу">
@@ -9,10 +12,10 @@
 
 <section class="catalog" aria-labelledby="search-title">
     <h1 class="catalog__title" id="search-title">Результаты поиска</h1>
-    {% if not q %}
+    {% if not q and not species %}
     <p class="catalog__empty">Введите кличку, породу или слово из описания.</p>
     {% elif page_obj.paginator.count %}
-    <p class="catalog__count">По запросу «{{ q }}» найдено: {{ page_obj.paginator.count }}</p>
+    <p class="catalog__count">Найдено питомцев: {{ page_obj.paginator.count }}</p>
     <ul class="catalog__grid">
         {% for pet in page_obj %}
         <li>{% include '_pet_card.html' %}</li>
@@ -20,7 +23,7 @@
     </ul>
     {% include '_pagination.html' %}
     {% else %}
-    <p class="catalog__empty">По запросу «{{ q }}» ничего не найдено.</p>
+    <p class="catalog__empty">Ничего не найдено. Измените запрос или фильтр.</p>
     {% endif %}
 </section>
 {% endblock %}

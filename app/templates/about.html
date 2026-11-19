@@ -8,4 +8,13 @@
     <p>«Лапа помощи» — городской приют для животных. На сайте можно познакомиться с питомцами, записаться на прогулку, оформить опеку или забрать питомца домой.</p>
     <p>Если вы хотите помочь приюту, раздел «Поддержать» покажет, как это сделать.</p>
 </section>
+
+<section class="auth auth--wide" aria-labelledby="contact-title">
+    <h2 class="auth__title" id="contact-title">Написать нам</h2>
+    <form class="auth__form" method="post" action="{% url 'about' %}" novalidate data-validate>
+        {% csrf_token %}
+        {% include '_form_fields.html' %}
+        <button class="btn btn--black" type="submit">Отправить</button>
+    </form>
+</section>
 {% endblock %}

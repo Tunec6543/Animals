@@ -1,0 +1,12 @@
+{% if page_obj.object_list %}
+<ul class="catalog__grid">
+    {% for pet in page_obj %}
+    <li>{% include '_pet_card.html' %}</li>
+    {% endfor %}
+</ul>
+{% include '_pagination.html' %}
+{% elif q or species %}
+<p class="catalog__empty">Ничего не найдено. Измените запрос или фильтр.</p>
+{% else %}
+<p class="catalog__empty">В каталоге пока нет питомцев.</p>
+{% endif %}

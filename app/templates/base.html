@@ -5,15 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}Лапа помощи{% endblock %}</title>
     <script>document.documentElement.classList.add('js');</script>
+    <link rel="icon" href="{% static 'images/favicon.svg' %}" type="image/svg+xml">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500&amp;display=swap">
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     <script src="{% static 'js/menu.js' %}" defer></script>
+    <script src="{% static 'js/forms.js' %}" defer></script>
+    {% block scripts %}{% endblock %}
 </head>
 <body>
     {% with current=request.resolver_match.url_name %}
     <header class="site-header container">
+        <a class="site-header__brand" href="{% url 'index' %}">Лапа помощи</a>
         <button class="burger" type="button" aria-expanded="false" aria-controls="main-menu">
             <span class="burger__line"></span>
             <span class="burger__line"></span>
@@ -44,6 +48,13 @@
     {% endwith %}
 
     <main class="container">
+        {% if messages %}
+        <div class="messages" role="status">
+            {% for message in messages %}
+            <p class="messages__item messages__item--{{ message.tags }}">{{ message }}</p>
+            {% endfor %}
+        </div>
+        {% endif %}
         {% block content %}{% endblock %}
     </main>
 

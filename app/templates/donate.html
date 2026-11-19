@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block title %}Пожертвование — Лапа помощи{% endblock %}
+
+{% block content %}
+<section class="donate" aria-labelledby="donate-title">
+    <h1 class="donate__title" id="donate-title">Пожертвование</h1>
+    <p class="donate__text">Взнос идёт на корм, лечение и содержание выбранного питомца. Сумма от 50 до 100 000 рублей.{% if total %} Уже собрано: {{ total|floatformat:0 }} ₽.{% endif %}</p>
+
+    {% if form %}
+    <form class="donate__form" method="post" action="{% url 'donate' %}" novalidate data-validate>
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+        <div class="form-errors" role="alert">
+            {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+        </div>
+        {% endif %}
+        {% for field in form %}
+        <div class="field">
+            <label class="visually-hidden" for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            <p class="field__error" id="{{ field.auto_id }}_error">{% for error in field.errors %}{{ error }} {% endfor %}</p>
+        </div>
+        {% endfor %}
+        <button class="donate__submit" type="submit">Пожертвовать</button>
+    </form>
+    {% else %}
+    <p class="donate__text">Чтобы сделать пожертвование, <a href="{% url 'login' %}?next={% url 'donate' %}">войдите</a> или <a href="{% url 'register' %}">зарегистрируйтесь</a>.</p>
+    {% endif %}
+</section>
+
+{% if form %}
+<section class="page-block page-block--auto" aria-labelledby="payments-title">
+    <h2 class="profile__subtitle" id="payments-title">Ваши последние пожертвования</h2>
+    {% if payments %}
+    <ul class="profile__list">
+        {% for payment in payments %}
+        <li class="profile__item">
+            <a href="{% url 'pet_detail' payment.pet.pk %}">{{ payment.pet.name }}</a>
+            <span>{{ payment.amount|floatformat:2 }} ₽</span>
+            <span>{{ payment.get_payment_type_display }}</span>
+            <span>{{ payment.payment_date|date:"d.m.Y H:i" }}</span>
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p>Вы пока не делали пожертвований.</p>
+    {% endif %}
+</section>
+{% endif %}
+{% endblock %}

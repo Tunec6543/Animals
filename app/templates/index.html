@@ -3,6 +3,8 @@
 
 {% block title %}Лапа помощи — каталог питомцев{% endblock %}
 
+{% block scripts %}<script src="{% static 'js/catalog.js' %}" defer></script>{% endblock %}
+
 {% block content %}
 <section class="hero">
     <img class="hero__image" src="{% static 'images/hero.svg' %}" alt="Иллюстрация: зелёный силуэт питомца" width="834" height="545">
@@ -10,20 +12,15 @@
 </section>
 
 <section class="search" aria-label="Поиск по каталогу">
-    {% include '_search_form.html' %}
+    {% include '_search_form.html' with live=True %}
+    <button class="fav-toggle" id="fav-toggle" type="button" aria-pressed="false">Только избранные: <span id="fav-count">0</span></button>
 </section>
 
 <section class="catalog" aria-labelledby="catalog-title">
     <h2 class="visually-hidden" id="catalog-title">Питомцы приюта</h2>
-    {% if page_obj.object_list %}
-    <ul class="catalog__grid">
-        {% for pet in page_obj %}
-        <li>{% include '_pet_card.html' %}</li>
-        {% endfor %}
-    </ul>
-    {% include '_pagination.html' %}
-    {% else %}
-    <p class="catalog__empty">В каталоге пока нет питомцев.</p>
-    {% endif %}
+    <p class="catalog__status" id="catalog-status" role="status" aria-live="polite"></p>
+    <div class="catalog__results" id="catalog-results">
+        {% include '_catalog_content.html' %}
+    </div>
 </section>
 {% endblock %}

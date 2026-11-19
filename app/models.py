@@ -168,6 +168,11 @@ class AdoptionContract(models.Model):
 
 
 class SponsorshipPayment(models.Model):
+    PAYMENT_CHOICES = [
+        ('card', 'Банковская карта'),
+        ('sbp', 'Система быстрых платежей'),
+        ('cash', 'Наличными в приюте'),
+    ]
     sponsor = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
         related_name='sponsorship_payments', verbose_name='Опекун'
@@ -176,6 +181,8 @@ class SponsorshipPayment(models.Model):
         Pet, on_delete=models.CASCADE, related_name='sponsorships', verbose_name='Питомец'
     )
     amount = models.DecimalField('Сумма взноса (руб.)', max_digits=10, decimal_places=2)
+    payment_type = models.CharField('Тип оплаты', max_length=10, choices=PAYMENT_CHOICES, default='card')
+    comment = models.TextField('Комментарий', blank=True)
     payment_date = models.DateTimeField(auto_now_add=True, verbose_name='Дата платежа')
 
     def __str__(self):
@@ -206,3 +213,21 @@ class HomePhotoReport(models.Model):
         verbose_name = 'Фотоотчёт из нового дома'
         verbose_name_plural = 'Фотоотчёты из нового дома'
         ordering = ['-report_date']
+
+
+class Profile(models.Model):
+    GENDER_CHOICES = [('male', 'Мужской'), ('female', 'Женский')]
+
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+        related_name='profile', verbose_name='Пользователь',
+    )
+    phone = models.CharField('Телефон', max_length=20, blank=True)
+    gender = models.CharField('Пол', max_length=10, choices=GENDER_CHOICES, blank=True)
+
+    def __str__(self):
+        return f'Профиль {self.user.username}'
+
+    class Meta:
+        verbose_name = 'Профиль пользователя'
+        verbose_name_plural = 'Профили пользователей'

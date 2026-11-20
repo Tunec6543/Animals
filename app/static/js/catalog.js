@@ -76,7 +76,7 @@
                 if (!response.ok) {
                     throw new Error('HTTP ' + response.status);
                 }
-                return response.json();
+                return response.json(); //fixed
             })
             .then(function (data) {
                 results.innerHTML = data.html;

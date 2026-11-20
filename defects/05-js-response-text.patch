@@ -1,0 +1,11 @@
+--- a/app/static/js/catalog.js
++++ b/app/static/js/catalog.js
+@@ -76,7 +76,7 @@
+                 if (!response.ok) {
+                     throw new Error('HTTP ' + response.status);
+                 }
+-                return response.json();
++                return response.text();
+             })
+             .then(function (data) {
+                 results.innerHTML = data.html;

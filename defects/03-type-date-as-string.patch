@@ -1,0 +1,11 @@
+--- a/app/forms.py
++++ b/app/forms.py
+@@ -111,7 +111,7 @@
+ 
+     def clean_date_time(self):
+         value = self.cleaned_data['date_time']
+-        now = timezone.now()
++        now = timezone.now().strftime('%Y-%m-%d %H:%M')
+         local = timezone.localtime(value)
+         if value <= now:
+             raise forms.ValidationError('Выберите время в будущем.')

@@ -111,7 +111,7 @@ class WalkForm(StyledFormMixin, forms.ModelForm):
 
     def clean_date_time(self):
         value = self.cleaned_data['date_time']
-        now = timezone.now()
+        now = now = timezone.now()
         local = timezone.localtime(value)
         if value <= now:
             raise forms.ValidationError('Выберите время в будущем.')

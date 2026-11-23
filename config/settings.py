@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure--@u3ek^9qqn97uai^#6dxks-*a#)ramnwui+z8bx+!ihkv3iqm
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost',]
 
 
 # Application definition
@@ -53,7 +53,9 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'config.urls'
 
-if DEBUG:
+USE_DEBUG_TOOLBAR = False
+
+if DEBUG and USE_DEBUG_TOOLBAR:
     import mimetypes
 
     mimetypes.add_type('application/javascript', '.js', True)
@@ -63,7 +65,7 @@ if DEBUG:
         MIDDLEWARE.index('django.middleware.security.SecurityMiddleware') + 1,
         'debug_toolbar.middleware.DebugToolbarMiddleware',
     )
-    INTERNAL_IPS = ['127.0.0.1']
+    INTERNAL_IPS = ['127.0.0.1', 'localhost']
 
 TEMPLATES = [
     {

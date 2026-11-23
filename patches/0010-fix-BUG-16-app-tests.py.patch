@@ -1,0 +1,49 @@
+From 637662adbf675d24aed692cf8927c21c77adce69 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?=D0=A1=D1=82=D1=83=D0=B4=D0=B5=D0=BD=D1=82?=
+ <student@example.com>
+Date: Sun, 22 Nov 2026 09:08:47 +0000
+Subject: [PATCH 10/10] =?UTF-8?q?fix(BUG-16):=20=D0=B0=D0=B2=D1=82=D0=BE?=
+ =?UTF-8?q?=D1=82=D0=B5=D1=81=D1=82=D1=8B=20app/tests.py=20=D0=BF=D1=80?=
+ =?UTF-8?q?=D0=B8=D0=B2=D0=B5=D0=B4=D0=B5=D0=BD=D1=8B=20=D0=B2=20=D1=81?=
+ =?UTF-8?q?=D0=BE=D0=BE=D1=82=D0=B2=D0=B5=D1=82=D1=81=D1=82=D0=B2=D0=B8?=
+ =?UTF-8?q?=D0=B5=20=D1=81=20=D0=BF=D0=BE=D0=B2=D0=B5=D0=B4=D0=B5=D0=BD?=
+ =?UTF-8?q?=D0=B8=D0=B5=D0=BC=20=D1=81=D0=B0=D0=B9=D1=82=D0=B0?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+test_search_is_case_insensitive_for_cyrillic сверялся с текстом в нижнем регистре;
+test_static_pages ожидал 200 для /staff/, хотя раздел требует входа (302). Добавлен
+отдельный тест на редирект гостя. Все 21 тест проекта проходят.
+---
+ app/tests.py | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
+
+diff --git a/app/tests.py b/app/tests.py
+index d793bb2..801fb09 100644
+--- a/app/tests.py
++++ b/app/tests.py
+@@ -30,7 +30,7 @@ class SiteTests(TestCase):
+         response = self.client.get(reverse('search'), {'q': 'барсик'})
+         self.assertEqual(response.context['page_obj'].paginator.count, 1)
+         empty = self.client.get(reverse('search'), {'q': 'нет такого'})
+-        self.assertContains(empty, 'ничего не найдено')
++        self.assertContains(empty, 'Ничего не найдено')
+ 
+     def test_profile_requires_login(self):
+         response = self.client.get(reverse('profile'))
+@@ -53,5 +53,10 @@ class SiteTests(TestCase):
+         self.assertContains(response, 'field__error')
+ 
+     def test_static_pages(self):
+-        for name in ('about', 'donate', 'staff', 'login', 'register'):
++        for name in ('about', 'donate', 'login', 'register'):
+             self.assertEqual(self.client.get(reverse(name)).status_code, 200)
++
++    def test_staff_page_requires_login(self):
++        response = self.client.get(reverse('staff'))
++        self.assertEqual(response.status_code, 302)
++        self.assertIn(reverse('login'), response['Location'])
+-- 
+2.43.0
+

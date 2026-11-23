@@ -1,0 +1,57 @@
+From 052a4528886f634d1a83329ad80390c630833843 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?=D0=A1=D1=82=D1=83=D0=B4=D0=B5=D0=BD=D1=82?=
+ <student@example.com>
+Date: Sun, 22 Nov 2026 09:08:02 +0000
+Subject: [PATCH 09/10] =?UTF-8?q?fix(BUG-14):=20=D1=81=D1=81=D1=8B=D0=BB?=
+ =?UTF-8?q?=D0=BA=D0=B0=20=C2=AB=D0=A1=D0=BE=D1=82=D1=80=D1=83=D0=B4=D0=BD?=
+ =?UTF-8?q?=D0=B8=D0=BA=D0=B0=D0=BC=C2=BB=20=D0=B2=20=D1=88=D0=B0=D0=BF?=
+ =?UTF-8?q?=D0=BA=D0=B5=20=D0=BF=D0=BE=D0=BA=D0=B0=D0=B7=D1=8B=D0=B2=D0=B0?=
+ =?UTF-8?q?=D0=B5=D1=82=D1=81=D1=8F=20=D1=82=D0=BE=D0=BB=D1=8C=D0=BA=D0=BE?=
+ =?UTF-8?q?=20=D0=BF=D0=BE=D0=BB=D1=8C=D0=B7=D0=BE=D0=B2=D0=B0=D1=82=D0=B5?=
+ =?UTF-8?q?=D0=BB=D1=8F=D0=BC=20=D1=81=20is=5Fstaff?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Гостям и обычным пользователям пункт меню скрыт; сам раздел по-прежнему защищён staff_required.
+---
+ app/templates/base.html |  2 ++
+ app/test_defects.py     | 11 +++++++++++
+ 2 files changed, 13 insertions(+)
+
+diff --git a/app/templates/base.html b/app/templates/base.html
+index 7e42a07..6bbaff5 100644
+--- a/app/templates/base.html
++++ b/app/templates/base.html
+@@ -41,7 +41,9 @@
+                 {% endif %}
+                 <li><a class="main-nav__link{% if current == 'about' %} is-active{% endif %}" href="{% url 'about' %}"{% if current == 'about' %} aria-current="page"{% endif %}>О нас</a></li>
+                 <li><a class="main-nav__link{% if current == 'donate' %} is-active{% endif %}" href="{% url 'donate' %}"{% if current == 'donate' %} aria-current="page"{% endif %}>Поддержать</a></li>
++                {% if user.is_staff %}
+                 <li><a class="main-nav__link{% if current == 'staff' %} is-active{% endif %}" href="{% url 'staff' %}"{% if current == 'staff' %} aria-current="page"{% endif %}>Сотрудникам</a></li>
++                {% endif %}
+             </ul>
+         </nav>
+     </header>
+diff --git a/app/test_defects.py b/app/test_defects.py
+index 66c917c..b1e5f4a 100644
+--- a/app/test_defects.py
++++ b/app/test_defects.py
+@@ -150,3 +150,14 @@ class Bug12CancelButtonTests(TestCase):
+         self.assertContains(response, 'href="%s"' % reverse('profile'))
+         user.refresh_from_db()
+         self.assertEqual(user.last_name, 'Петрова')
++
++
++class Bug14StaffLinkTests(TestCase):
++    """BUG-14: ссылка «Сотрудникам» видна только сотрудникам."""
++
++    def test_visibility(self):
++        self.assertNotContains(self.client.get(reverse('index')), 'Сотрудникам')
++        self.client.force_login(User.objects.create_user('anna', 'a@e.com', 'Test#12345'))
++        self.assertNotContains(self.client.get(reverse('index')), 'Сотрудникам')
++        self.client.force_login(User.objects.create_user('staff', 's@e.com', 'Test#12345', is_staff=True))
++        self.assertContains(self.client.get(reverse('index')), 'Сотрудникам')
+-- 
+2.43.0
+

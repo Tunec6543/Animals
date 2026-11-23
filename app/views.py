@@ -11,6 +11,7 @@ from django.db.models import Avg, Q, Sum
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
+from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
@@ -220,6 +221,7 @@ def profile_edit(request):
             "form": form,
             "title": "Редактирование профиля",
             "submit": "Сохранить",
+            "cancel_url": reverse("profile"),
         },
     )
 

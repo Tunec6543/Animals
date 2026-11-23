@@ -9,6 +9,7 @@
         {% csrf_token %}
         {% include '_form_fields.html' %}
         <button class="btn btn--black" type="submit">{{ submit }}</button>
+        {% if cancel_url %}<a class="btn btn--green" href="{{ cancel_url }}">Отмена</a>{% endif %}
     </form>
 </section>
 {% endblock %}

@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.db import models
 from django.db.models import Q
-
+from .validators import validate_image_file
 
 class Volier(models.Model):
     number = models.CharField('Номер/название вольера', max_length=50, unique=True)
@@ -25,6 +25,7 @@ class Pet(models.Model):
         ('available', 'Доступен'),
         ('quarantine', 'На карантине'),
         ('treatment', 'На лечении'),
+        ('reserved', 'Забронирован'),
         ('adopted', 'Обрёл дом'),
     ]
     GENDER_CHOICES = [('male', 'Мальчик'), ('female', 'Девочка')]
@@ -37,7 +38,12 @@ class Pet(models.Model):
     gender = models.CharField('Пол', max_length=10, choices=GENDER_CHOICES)
     status = models.CharField('Статус', max_length=20, choices=STATUS_CHOICES, default='available')
     description = models.TextField('История и характер', blank=True)
-    photo = models.ImageField('Фотография', upload_to='pets/', blank=True)
+    photo = models.ImageField(
+        'Фотография',
+        upload_to='pets/',
+        blank=True,
+        validators=[validate_image_file]
+    )
     volier = models.ForeignKey(
         Volier, on_delete=models.SET_NULL, null=True, blank=True,
         related_name='pets', verbose_name='Вольер',
@@ -98,6 +104,12 @@ class AdoptionApplication(models.Model):
 
     def __str__(self):
         return f'Заявка #{self.pk} от {self.user.username} на {self.pet.name}'
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        # BUG-01: одобренная заявка бронирует питомца, чтобы на него нельзя было подать новую заявку
+        if self.status == 'approved':
+            Pet.objects.filter(pk=self.pet_id, status='available').update(status='reserved')
 
     class Meta:
         verbose_name = 'Анкета на усыновление'
@@ -203,7 +215,11 @@ class HomePhotoReport(models.Model):
         related_name='reports', verbose_name='Договор'
     )
     report_date = models.DateField(auto_now_add=True, verbose_name='Дата отчёта')
-    photo = models.ImageField('Фото из дома', upload_to='reports/')
+    photo = models.ImageField(
+        'Фото из дома',
+        upload_to='reports/',
+        validators=[validate_image_file]
+    )
     comment = models.TextField('Комментарий хозяина', blank=True)
 
     def __str__(self):

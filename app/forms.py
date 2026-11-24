@@ -4,6 +4,7 @@ from datetime import timedelta
 from django import forms
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import AuthenticationForm
+from django.core.cache import cache
 from django.contrib.auth.password_validation import validate_password
 from django.core.validators import RegexValidator
 from django.utils import timezone
@@ -14,9 +15,16 @@ User = get_user_model()
 
 logger = logging.getLogger(__name__)
 
-phone_validator = RegexValidator(
-    r'^\+?[\d\s()-]{10,18}$', 'Введите телефон в формате +7 900 000-00-00.'
-)
+PHONE_MESSAGE = 'Введите телефон в формате +7 900 000-00-00.'
+_phone_chars = RegexValidator(r'^\+?[\d\s()-]{10,18}$', PHONE_MESSAGE)
+
+
+def phone_validator(value):
+    # BUG-11: помимо допустимых символов в номере должно быть от 10 до 15 цифр
+    _phone_chars(value)
+    digits = sum(ch.isdigit() for ch in value)
+    if not 10 <= digits <= 15:
+        raise forms.ValidationError(PHONE_MESSAGE)
 
 
 class StyledFormMixin:
@@ -28,19 +36,52 @@ class StyledFormMixin:
             field.widget.attrs['class'] = css
 
 
+LOGIN_MAX_ATTEMPTS = 5
+LOGIN_LOCK_SECONDS = 15 * 60
+
+
 class LoginForm(StyledFormMixin, AuthenticationForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['username'].label = 'Логин'
         self._style_fields()
 
+    def _fail_key(self, username):
+        ip = self.request.META.get('REMOTE_ADDR', '') if self.request else ''
+        return f'login-fail:{ip}:{(username or "").lower()}'
+
     def clean(self):
+        username = self.cleaned_data.get('username')
+        key = self._fail_key(username)
+
+        if cache.get(key, 0) >= LOGIN_MAX_ATTEMPTS:
+            logger.warning(
+                'Вход заблокирован после серии неудачных попыток: логин=%s',
+                username
+            )
+            raise forms.ValidationError(
+                'Слишком много неудачных попыток входа. Повторите через 15 минут.',
+                code='locked'
+            )
+
         try:
-            return super().clean()
+            result = super().clean()
         except forms.ValidationError:
-            logger.warning('Неудачная попытка входа: логин=%s', self.cleaned_data.get('username'))
+            logger.warning(
+                'Неудачная попытка входа: логин=%s',
+                username
+            )
+            cache.add(key, 0, LOGIN_LOCK_SECONDS)
+
+            try:
+                cache.incr(key)
+            except ValueError:
+                cache.set(key, 1, LOGIN_LOCK_SECONDS)
+
             raise
 
+        cache.delete(key)
+        return result
 
 class RegisterForm(StyledFormMixin, forms.ModelForm):
     password = forms.CharField(label='Пароль', min_length=8, widget=forms.PasswordInput)
@@ -61,10 +102,22 @@ class RegisterForm(StyledFormMixin, forms.ModelForm):
             raise forms.ValidationError('Пользователь с таким email уже зарегистрирован.')
         return email
 
-    def clean_password(self):
-        password = self.cleaned_data['password']
-        validate_password(password)
-        return password
+    def clean(self):
+        cleaned = super().clean()
+        password = cleaned.get('password')
+
+        if password:
+            candidate = User(
+                username=cleaned.get('username', ''),
+                email=cleaned.get('email', '')
+            )
+
+            try:
+                validate_password(password, candidate)
+            except forms.ValidationError as error:
+                self.add_error('password', error)
+
+        return cleaned
 
     def save(self, commit=True):
         user = super().save(commit=False)
@@ -141,8 +194,9 @@ class DonateForm(StyledFormMixin, forms.ModelForm):
     pet = forms.ModelChoiceField(
         label='Питомец', queryset=Pet.objects.exclude(status='adopted'), empty_label='Выберите питомца',
     )
-    amount = forms.DecimalField(
-        label='Сумма взноса, ₽', min_value=50, max_value=100000, max_digits=10, decimal_places=2,
+    amount = forms.IntegerField(
+        label='Сумма взноса, ₽', min_value=50, max_value=100000,
+        error_messages={'invalid': 'Введите целое число рублей, например 500.'},
         widget=forms.NumberInput(attrs={'min': 50, 'max': 100000, 'step': 1, 'placeholder': 'Сумма ₽...'}),
     )
     payment_type = forms.ChoiceField(
@@ -181,6 +235,13 @@ class ProfileForm(StyledFormMixin, forms.ModelForm):
         self.fields['phone'].initial = profile.phone
         self.fields['gender'].initial = profile.gender
         self._style_fields()
+
+    def clean_email(self):
+        # BUG-04: email должен оставаться уникальным (как при регистрации), свой текущий email допустим
+        email = self.cleaned_data['email']
+        if User.objects.filter(email__iexact=email).exclude(pk=self.instance.pk).exists():
+            raise forms.ValidationError('Пользователь с таким email уже зарегистрирован.')
+        return email
 
     def save(self, commit=True):
         user = super().save(commit)

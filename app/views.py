@@ -5,6 +5,7 @@ from functools import wraps
 from django.contrib import messages
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
+from django.db import IntegrityError, transaction
 from django.core.mail import send_mail
 from django.core.paginator import Paginator
 from django.db.models import Avg, Q, Sum
@@ -48,7 +49,12 @@ def _filter_pets(request):
     if species in dict(Pet.SPECIES_CHOICES):
         pets = pets.filter(species=species)
     if "ids" in request.GET:
-        ids = [int(i) for i in request.GET["ids"].split(",") if i.isdigit()]
+        # BUG-03: ограничиваем длину числа и количество идентификаторов, иначе SQLite даёт OverflowError (500)
+        ids = [
+            int(i)
+            for i in request.GET["ids"].split(",")[:200]
+            if i.isdigit() and len(i) <= 18
+        ]
         pets = pets.filter(pk__in=ids)
     if q:
         # SQLite сравнивает кириллицу с учётом регистра, поэтому пробуем разные варианты написания
@@ -153,7 +159,13 @@ def adopt(request, pk):
         application = form.save(commit=False)
         application.user = request.user
         application.pet = pet
-        application.save()
+        try:
+            with transaction.atomic():
+                application.save()
+        except IntegrityError:
+            # BUG-02: двойная отправка формы — вторая заявка нарушает уникальность (пользователь, питомец)
+            messages.info(request, "Вы уже подавали заявку на этого питомца.")
+            return redirect("profile")
         logger.info(
             "Заявка на усыновление: пользователь=%s, питомец=%s",
             request.user.username,
@@ -329,6 +341,9 @@ def staff_application(request, pk):
         application.pk,
     )
     if action == "approve":
+        if application.pet.status == "reserved":
+            messages.error(request, "Питомец уже забронирован другой одобренной заявкой.")
+            return redirect("staff")
         application.status = "approved"
         messages.success(request, f"Заявка на питомца {application.pet.name} одобрена.")
     elif action == "reject":

@@ -41,7 +41,9 @@
                 {% endif %}
                 <li><a class="main-nav__link{% if current == 'about' %} is-active{% endif %}" href="{% url 'about' %}"{% if current == 'about' %} aria-current="page"{% endif %}>О нас</a></li>
                 <li><a class="main-nav__link{% if current == 'donate' %} is-active{% endif %}" href="{% url 'donate' %}"{% if current == 'donate' %} aria-current="page"{% endif %}>Поддержать</a></li>
+                {% if user.is_staff %}
                 <li><a class="main-nav__link{% if current == 'staff' %} is-active{% endif %}" href="{% url 'staff' %}"{% if current == 'staff' %} aria-current="page"{% endif %}>Сотрудникам</a></li>
+                {% endif %}
             </ul>
         </nav>
     </header>

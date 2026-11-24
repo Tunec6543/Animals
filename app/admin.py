@@ -75,7 +75,9 @@ class AdoptionApplicationAdmin(admin.ModelAdmin):
 
     @admin.action(description="Одобрить выбранные заявки")
     def approve(self, request, queryset):
-        queryset.filter(status="pending").update(status="approved")
+        for application in queryset.filter(status="pending"):
+            application.status = "approved"
+            application.save()
 
     @admin.action(description="Отклонить выбранные заявки")
     def reject(self, request, queryset):

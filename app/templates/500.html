@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+
+{% block title %}Ошибка сервера — Лапа помощи{% endblock %}
+
+{% block content %}
+<section class="page-block page-block--center" aria-labelledby="error-title">
+    <h1 class="page-block__code" id="error-title">500</h1>
+    <p class="page-block__text">Что-то пошло не так на нашей стороне. Мы уже записали ошибку в журнал. Попробуйте повторить действие позже.</p>
+    <a class="btn btn--green" href="{% url 'index' %}">На главную</a>
+    <a class="btn btn--black" href="{% url 'search' %}">Поиск питомца</a>
+</section>
+{% endblock %}

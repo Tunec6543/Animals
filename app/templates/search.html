@@ -12,7 +12,7 @@
 
 <section class="catalog" aria-labelledby="search-title">
     <h1 class="catalog__title" id="search-title">Результаты поиска</h1>
-    {% if not q and not species %}
+    {% if not has_filters %}
     <p class="catalog__empty">Введите кличку, породу или слово из описания.</p>
     {% elif page_obj.paginator.count %}
     <p class="catalog__count">Найдено питомцев: {{ page_obj.paginator.count }}</p>

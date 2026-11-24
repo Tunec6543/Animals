@@ -30,6 +30,12 @@
                     {% if application.contract %}
                     <span>Договор от {{ application.contract.signed_date|date:"d.m.Y" }}</span>
                     {% endif %}
+                    {% if application.status == 'pending' %}
+                    <form method="post" action="{% url 'application_cancel' application.pk %}">
+                        {% csrf_token %}
+                        <button class="btn btn--black" type="submit">Отменить заявку</button>
+                    </form>
+                    {% endif %}
                 </li>
                 {% endfor %}
             </ul>
@@ -50,6 +56,25 @@
             </ul>
             {% else %}
             <p>Записей на прогулки пока нет.</p>
+            {% endif %}
+        </section>
+
+        <section class="profile__orders" aria-labelledby="donations-title">
+            <h2 class="profile__subtitle" id="donations-title">История пожертвований</h2>
+            {% if payments %}
+            <p>Всего пожертвовано: {{ donations_total|floatformat:2 }} ₽</p>
+            <ul class="profile__list">
+                {% for payment in payments %}
+                <li class="profile__item">
+                    <a href="{% url 'pet_detail' payment.pet.pk %}">{{ payment.pet.name }}</a>
+                    <span>{{ payment.amount|floatformat:2 }} ₽</span>
+                    <span>{{ payment.get_payment_type_display }}</span>
+                    <span>{{ payment.payment_date|date:"d.m.Y H:i" }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p>Вы пока не делали пожертвований. <a href="{% url 'donate' %}">Сделать пожертвование</a></p>
             {% endif %}
         </section>
 

@@ -44,9 +44,11 @@
         if (q) {
             params.set('q', q);
         }
-        if (form.elements.species.value) {
-            params.set('species', form.elements.species.value);
-        }
+        ['species', 'gender', 'age'].forEach(function (name) {
+            if (form.elements[name].value) {
+                params.set(name, form.elements[name].value);
+            }
+        });
         if (favOnly) {
             params.set('ids', readFavorites().join(','));
         }
@@ -132,8 +134,10 @@
                 load(buildQuery());
             }, 300);
         });
-        form.elements.species.addEventListener('change', function () {
-            load(buildQuery());
+        ['species', 'gender', 'age'].forEach(function (name) {
+            form.elements[name].addEventListener('change', function () {
+                load(buildQuery());
+            });
         });
         if (favToggle) {
             favToggle.addEventListener('click', function () {

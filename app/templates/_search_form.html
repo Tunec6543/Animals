@@ -12,5 +12,19 @@
         <option value="{{ value }}"{% if value == species %} selected{% endif %}>{{ label }}</option>
         {% endfor %}
     </select>
+    <label class="visually-hidden" for="search-gender">Пол</label>
+    <select class="search__select" id="search-gender" name="gender">
+        <option value="">Любой пол</option>
+        {% for value, label in gender_choices %}
+        <option value="{{ value }}"{% if value == gender %} selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+    </select>
+    <label class="visually-hidden" for="search-age">Возраст</label>
+    <select class="search__select" id="search-age" name="age">
+        <option value="">Любой возраст</option>
+        {% for value, label in age_choices %}
+        <option value="{{ value }}"{% if value == age %} selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+    </select>
     <button class="search__submit" type="submit">Найти</button>
 </form>

@@ -30,6 +30,11 @@ urlpatterns = [
     ),
     path("register/", views.register, name="register"),
     path("profile/", views.profile, name="profile"),
+    path(
+        "profile/applications/<int:pk>/cancel/",
+        views.application_cancel,
+        name="application_cancel",
+    ),
     path("profile/edit/", views.profile_edit, name="profile_edit"),
     path("profile/delete/", views.profile_delete, name="profile_delete"),
     path("logout/", LogoutView.as_view(), name="logout"),

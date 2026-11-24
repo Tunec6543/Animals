@@ -45,7 +45,6 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "app.middleware.NotFoundMiddleware",
 ]
 
 ROOT_URLCONF = "config.urls"
@@ -141,6 +140,7 @@ MAILERS = {
     },
 }
 
+CSRF_FAILURE_VIEW = "app.views.csrf_failure"
 LOGIN_URL = "login"
 LOGOUT_REDIRECT_URL = "index"
 MEDIA_URL = "media/"

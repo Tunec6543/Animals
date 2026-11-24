@@ -85,15 +85,24 @@ class LoginForm(StyledFormMixin, AuthenticationForm):
 
 class RegisterForm(StyledFormMixin, forms.ModelForm):
     password = forms.CharField(label='Пароль', min_length=8, widget=forms.PasswordInput)
+    password2 = forms.CharField(label='Подтверждение пароля', widget=forms.PasswordInput)
+    phone = forms.CharField(
+        label='Телефон', validators=[phone_validator],
+        widget=forms.TextInput(attrs={'type': 'tel'}),
+    )
 
     class Meta:
         model = User
-        fields = ('username', 'email')
-        labels = {'username': 'Логин', 'email': 'Email'}
+        fields = ('last_name', 'first_name', 'username', 'email')
+        labels = {
+            'last_name': 'Фамилия', 'first_name': 'Имя',
+            'username': 'Логин', 'email': 'Email',
+        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['email'].required = True
+        for name in ('last_name', 'first_name', 'email'):
+            self.fields[name].required = True
         self._style_fields()
 
     def clean_email(self):
@@ -105,6 +114,10 @@ class RegisterForm(StyledFormMixin, forms.ModelForm):
     def clean(self):
         cleaned = super().clean()
         password = cleaned.get('password')
+        password2 = cleaned.get('password2')
+
+        if password and password2 and password != password2:
+            self.add_error('password2', 'Пароли не совпадают. Введите один и тот же пароль дважды.')
 
         if password:
             candidate = User(
@@ -124,6 +137,9 @@ class RegisterForm(StyledFormMixin, forms.ModelForm):
         user.set_password(self.cleaned_data['password'])
         if commit:
             user.save()
+            profile, _ = Profile.objects.get_or_create(user=user)
+            profile.phone = self.cleaned_data['phone']
+            profile.save()
         return user
 
 
@@ -164,7 +180,7 @@ class WalkForm(StyledFormMixin, forms.ModelForm):
 
     def clean_date_time(self):
         value = self.cleaned_data['date_time']
-        now = now = timezone.now()
+        now = timezone.now()
         local = timezone.localtime(value)
         if value <= now:
             raise forms.ValidationError('Выберите время в будущем.')
@@ -196,7 +212,11 @@ class DonateForm(StyledFormMixin, forms.ModelForm):
     )
     amount = forms.IntegerField(
         label='Сумма взноса, ₽', min_value=50, max_value=100000,
-        error_messages={'invalid': 'Введите целое число рублей, например 500.'},
+        error_messages={
+            'invalid': 'Введите целое число рублей, например 500.',
+            'min_value': 'Минимальная сумма взноса — 50 ₽.',
+            'max_value': 'Максимальная сумма взноса — 100 000 ₽.',
+        },
         widget=forms.NumberInput(attrs={'min': 50, 'max': 100000, 'step': 1, 'placeholder': 'Сумма ₽...'}),
     )
     payment_type = forms.ChoiceField(

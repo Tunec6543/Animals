@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models import Q
 from .validators import validate_image_file
@@ -192,7 +193,10 @@ class SponsorshipPayment(models.Model):
     pet = models.ForeignKey(
         Pet, on_delete=models.CASCADE, related_name='sponsorships', verbose_name='Питомец'
     )
-    amount = models.DecimalField('Сумма взноса (руб.)', max_digits=10, decimal_places=2)
+    amount = models.DecimalField(
+        'Сумма взноса (руб.)', max_digits=10, decimal_places=2,
+        validators=[MinValueValidator(50), MaxValueValidator(100000)],
+    )
     payment_type = models.CharField('Тип оплаты', max_length=10, choices=PAYMENT_CHOICES, default='card')
     comment = models.TextField('Комментарий', blank=True)
     payment_date = models.DateTimeField(auto_now_add=True, verbose_name='Дата платежа')

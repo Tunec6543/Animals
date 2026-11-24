@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+
+{% block title %}Доступ запрещён — Лапа помощи{% endblock %}
+
+{% block content %}
+<section class="page-block page-block--center" aria-labelledby="error-title">
+    <h1 class="page-block__code" id="error-title">403</h1>
+    <p class="page-block__text">У вас нет прав для этого действия. Если вы уверены, что они должны быть, войдите под другой учётной записью или обновите страницу и повторите попытку.</p>
+    <a class="btn btn--green" href="{% url 'index' %}">На главную</a>
+    <a class="btn btn--black" href="{% url 'search' %}">Поиск питомца</a>
+</section>
+{% endblock %}

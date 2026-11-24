@@ -5,7 +5,7 @@
     {% endfor %}
 </ul>
 {% include '_pagination.html' %}
-{% elif q or species %}
+{% elif has_filters %}
 <p class="catalog__empty">Ничего не найдено. Измените запрос или фильтр.</p>
 {% else %}
 <p class="catalog__empty">В каталоге пока нет питомцев.</p>

@@ -108,7 +108,6 @@ class AdoptionApplication(models.Model):
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
-        # BUG-01: одобренная заявка бронирует питомца, чтобы на него нельзя было подать новую заявку
         if self.status == 'approved':
             Pet.objects.filter(pk=self.pet_id, status='available').update(status='reserved')
 

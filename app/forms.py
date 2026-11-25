@@ -1,4 +1,5 @@
 import logging
+import re
 from datetime import timedelta
 
 from django import forms
@@ -20,20 +21,47 @@ _phone_chars = RegexValidator(r'^\+?[\d\s()-]{10,18}$', PHONE_MESSAGE)
 
 
 def phone_validator(value):
-    # BUG-11: помимо допустимых символов в номере должно быть от 10 до 15 цифр
     _phone_chars(value)
     digits = sum(ch.isdigit() for ch in value)
     if not 10 <= digits <= 15:
         raise forms.ValidationError(PHONE_MESSAGE)
 
 
+def name_validator(value):
+    if not all(ch.isalpha() or ch in ' -' for ch in value):
+        raise forms.ValidationError('ФИО может содержать только буквы, пробел и дефис')
+
+
+EMAIL_INVALID = 'Проверьте e-mail, например name@example.ru'
+
+
+class NameCleanMixin:
+    def clean_last_name(self):
+        name_validator(self.cleaned_data['last_name'])
+        return self.cleaned_data['last_name']
+
+    def clean_first_name(self):
+        name_validator(self.cleaned_data['first_name'])
+        return self.cleaned_data['first_name']
+
+
 class StyledFormMixin:
+    messages = {}
+    placeholders = {}
+
     def _style_fields(self):
-        for field in self.fields.values():
+        for name, field in self.fields.items():
+            field.error_messages.update(self.messages.get(name, {}))
             css = 'field__input'
             if isinstance(field.widget, forms.Textarea):
                 css += ' field__input--area'
             field.widget.attrs['class'] = css
+            if name in self.placeholders:
+                field.widget.attrs['placeholder'] = self.placeholders[name]
+            for code, attr in (('required', 'msg-required'), ('invalid', 'msg-invalid'),
+                               ('min_value', 'msg-min'), ('max_value', 'msg-max')):
+                if code in field.error_messages and (code != 'required' or field.required):
+                    field.widget.attrs['data-' + attr] = str(field.error_messages[code])
 
 
 LOGIN_MAX_ATTEMPTS = 5
@@ -41,6 +69,16 @@ LOGIN_LOCK_SECONDS = 15 * 60
 
 
 class LoginForm(StyledFormMixin, AuthenticationForm):
+    error_messages = {
+        **AuthenticationForm.error_messages,
+        'invalid_login': 'Неверный логин или пароль. Проверьте данные и попробуйте снова',
+    }
+    messages = {
+        'username': {'required': 'Введите логин'},
+        'password': {'required': 'Введите пароль'},
+    }
+    placeholders = {'username': 'Логин', 'password': 'Пароль'}
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['username'].label = 'Логин'
@@ -83,12 +121,32 @@ class LoginForm(StyledFormMixin, AuthenticationForm):
         cache.delete(key)
         return result
 
-class RegisterForm(StyledFormMixin, forms.ModelForm):
+class RegisterForm(NameCleanMixin, StyledFormMixin, forms.ModelForm):
+    messages = {
+        'last_name': {'required': 'Введите фамилию'},
+        'first_name': {'required': 'Введите имя'},
+        'username': {
+            'required': 'Введите логин',
+            'unique': 'Этот логин уже занят. Попробуйте другой',
+        },
+        'email': {'required': 'Введите e-mail', 'invalid': EMAIL_INVALID},
+        'phone': {'required': 'Введите телефон'},
+        'password': {
+            'required': 'Введите пароль',
+            'min_length': 'Пароль слишком короткий: нужно не менее 8 символов',
+        },
+        'password2': {'required': 'Повторите пароль'},
+    }
+    placeholders = {
+        'last_name': 'Иванов', 'first_name': 'Иван', 'username': 'Придумайте логин',
+        'email': 'name@example.ru', 'phone': '+7 900 000-00-00',
+        'password': 'Не менее 8 символов', 'password2': 'Повторите пароль',
+    }
     password = forms.CharField(label='Пароль', min_length=8, widget=forms.PasswordInput)
     password2 = forms.CharField(label='Подтверждение пароля', widget=forms.PasswordInput)
     phone = forms.CharField(
         label='Телефон', validators=[phone_validator],
-        widget=forms.TextInput(attrs={'type': 'tel'}),
+        widget=forms.TextInput(attrs={'type': 'tel', 'data-msg-invalid': PHONE_MESSAGE}),
     )
 
     class Meta:
@@ -96,8 +154,9 @@ class RegisterForm(StyledFormMixin, forms.ModelForm):
         fields = ('last_name', 'first_name', 'username', 'email')
         labels = {
             'last_name': 'Фамилия', 'first_name': 'Имя',
-            'username': 'Логин', 'email': 'Email',
+            'username': 'Логин', 'email': 'E-mail',
         }
+        error_messages = {'username': {'unique': 'Этот логин уже занят. Попробуйте другой'}}
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -105,10 +164,16 @@ class RegisterForm(StyledFormMixin, forms.ModelForm):
             self.fields[name].required = True
         self._style_fields()
 
+    def clean_username(self):
+        username = self.cleaned_data['username']
+        if not re.fullmatch(r'\w{3,30}', username):
+            raise forms.ValidationError('Логин: от 3 до 30 символов — буквы, цифры и знак «_»')
+        return username
+
     def clean_email(self):
         email = self.cleaned_data['email']
         if User.objects.filter(email__iexact=email).exists():
-            raise forms.ValidationError('Пользователь с таким email уже зарегистрирован.')
+            raise forms.ValidationError('Этот e-mail уже зарегистрирован. Войдите в аккаунт')
         return email
 
     def clean(self):
@@ -119,7 +184,9 @@ class RegisterForm(StyledFormMixin, forms.ModelForm):
         if password and password2 and password != password2:
             self.add_error('password2', 'Пароли не совпадают. Введите один и тот же пароль дважды.')
 
-        if password:
+        if password and password.isdigit():
+            self.add_error('password', 'Добавьте в пароль буквы')
+        elif password:
             candidate = User(
                 username=cleaned.get('username', ''),
                 email=cleaned.get('email', '')
@@ -144,6 +211,16 @@ class RegisterForm(StyledFormMixin, forms.ModelForm):
 
 
 class AdoptionForm(StyledFormMixin, forms.ModelForm):
+    messages = {
+        'housing_conditions': {
+            'required': 'Опишите жилищные условия',
+            'min_length': 'Опишите подробнее: не менее 20 символов (сейчас: %(show_value)d)',
+        },
+        'experience': {
+            'required': 'Опишите опыт содержания животных',
+            'min_length': 'Опишите подробнее: не менее 20 символов (сейчас: %(show_value)d)',
+        },
+    }
     housing_conditions = forms.CharField(
         label='Жилищные условия', min_length=20, max_length=1000,
         widget=forms.Textarea(attrs={'rows': 4}),
@@ -163,6 +240,10 @@ class AdoptionForm(StyledFormMixin, forms.ModelForm):
 
 
 class WalkForm(StyledFormMixin, forms.ModelForm):
+    messages = {'date_time': {
+        'required': 'Выберите дату и время прогулки',
+        'invalid': 'Введите дату и время в формате ДД.ММ.ГГГГ ЧЧ:ММ',
+    }}
     date_time = forms.DateTimeField(
         label='Дата и время прогулки',
         input_formats=['%Y-%m-%dT%H:%M'],
@@ -194,10 +275,19 @@ class WalkForm(StyledFormMixin, forms.ModelForm):
 
 
 class ContactForm(StyledFormMixin, forms.Form):
+    messages = {
+        'name': {'required': 'Введите имя', 'min_length': 'Имя слишком короткое: не менее 2 символов'},
+        'email': {'required': 'Введите e-mail', 'invalid': EMAIL_INVALID},
+        'message': {
+            'required': 'Введите сообщение',
+            'min_length': 'Сообщение слишком короткое: не менее 10 символов (сейчас: %(show_value)d)',
+            'max_length': 'Сообщение слишком длинное: не более 1000 символов (сейчас: %(show_value)d)',
+        },
+    }
     name = forms.CharField(label='Имя', min_length=2, max_length=100)
     email = forms.EmailField(label='Email')
     phone = forms.CharField(label='Телефон', required=False, validators=[phone_validator],
-                            widget=forms.TextInput(attrs={'type': 'tel'}))
+                            widget=forms.TextInput(attrs={'type': 'tel', 'data-msg-invalid': PHONE_MESSAGE}))
     message = forms.CharField(label='Сообщение', min_length=10, max_length=1000,
                               widget=forms.Textarea(attrs={'rows': 5}))
 
@@ -207,17 +297,26 @@ class ContactForm(StyledFormMixin, forms.Form):
 
 
 class DonateForm(StyledFormMixin, forms.ModelForm):
+    messages = {
+        'pet': {'required': 'Выберите питомца из списка', 'invalid_choice': 'Выберите питомца из списка'},
+        'amount': {
+            'required': 'Введите сумму пожертвования',
+            'invalid': 'Введите сумму цифрами, например 500',
+            'min_value': 'Минимальная сумма — 50 ₽',
+            'max_value': 'Максимальная сумма — 100 000 ₽',
+        },
+        'payment_type': {
+            'required': 'Выберите способ оплаты из списка',
+            'invalid_choice': 'Выберите способ оплаты из списка',
+        },
+        'comment': {'max_length': 'Комментарий слишком длинный: не более 500 символов (сейчас: %(show_value)d)'},
+    }
     pet = forms.ModelChoiceField(
         label='Питомец', queryset=Pet.objects.exclude(status='adopted'), empty_label='Выберите питомца',
     )
     amount = forms.IntegerField(
         label='Сумма взноса, ₽', min_value=50, max_value=100000,
-        error_messages={
-            'invalid': 'Введите целое число рублей, например 500.',
-            'min_value': 'Минимальная сумма взноса — 50 ₽.',
-            'max_value': 'Максимальная сумма взноса — 100 000 ₽.',
-        },
-        widget=forms.NumberInput(attrs={'min': 50, 'max': 100000, 'step': 1, 'placeholder': 'Сумма ₽...'}),
+        widget=forms.NumberInput(attrs={'min': 50, 'max': 100000, 'step': 1, 'placeholder': 'Например, 500 ₽'}),
     )
     payment_type = forms.ChoiceField(
         label='Тип оплаты', choices=[('', 'Выберите тип оплаты')] + SponsorshipPayment.PAYMENT_CHOICES,
@@ -238,10 +337,11 @@ class DonateForm(StyledFormMixin, forms.ModelForm):
             self.fields[name].widget.attrs['class'] += ' field__input--select'
 
 
-class ProfileForm(StyledFormMixin, forms.ModelForm):
-    email = forms.EmailField(label='Email')
+class ProfileForm(NameCleanMixin, StyledFormMixin, forms.ModelForm):
+    messages = {'email': {'required': 'Введите e-mail', 'invalid': EMAIL_INVALID}}
+    email = forms.EmailField(label='E-mail')
     phone = forms.CharField(label='Телефон', required=False, validators=[phone_validator],
-                            widget=forms.TextInput(attrs={'type': 'tel'}))
+                            widget=forms.TextInput(attrs={'type': 'tel', 'data-msg-invalid': PHONE_MESSAGE}))
     gender = forms.ChoiceField(label='Пол', required=False, choices=[('', 'Не указан')] + Profile.GENDER_CHOICES)
 
     class Meta:
@@ -257,10 +357,9 @@ class ProfileForm(StyledFormMixin, forms.ModelForm):
         self._style_fields()
 
     def clean_email(self):
-        # BUG-04: email должен оставаться уникальным (как при регистрации), свой текущий email допустим
         email = self.cleaned_data['email']
         if User.objects.filter(email__iexact=email).exclude(pk=self.instance.pk).exists():
-            raise forms.ValidationError('Пользователь с таким email уже зарегистрирован.')
+            raise forms.ValidationError('Этот e-mail уже зарегистрирован. Войдите в аккаунт')
         return email
 
     def save(self, commit=True):

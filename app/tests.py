@@ -157,8 +157,8 @@ class DonationRangeTests(TestCase):
                 self.assertEqual(self._donate(value)[0], created)
 
     def test_error_message_is_shown(self):
-        self.assertContains(self._donate("10")[1], "Минимальная сумма взноса — 50 ₽.")
-        self.assertContains(self._donate("200000")[1], "Максимальная сумма взноса")
+        self.assertContains(self._donate("10")[1], "Минимальная сумма — 50 ₽")
+        self.assertContains(self._donate("200000")[1], "Максимальная сумма — 100 000 ₽")
 
     def test_model_validators(self):
         from django.core.exceptions import ValidationError

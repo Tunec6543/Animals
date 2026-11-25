@@ -9,7 +9,7 @@ from django.core.exceptions import PermissionDenied
 from django.db import DatabaseError, IntegrityError, transaction
 from django.core.mail import send_mail
 from django.core.paginator import Paginator
-from django.db.models import Avg, Q, Sum
+from django.db.models import Q, Sum
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
@@ -37,7 +37,6 @@ logger = logging.getLogger(__name__)
 
 PETS_PER_PAGE = 20
 
-# Возрастные группы каталога: ключ -> (подпись, от, до включительно)
 AGE_GROUPS = {
     "0-1": ("До 2 лет", 0, 1),
     "2-5": ("2–5 лет", 2, 5),
@@ -68,7 +67,6 @@ def _filter_pets(request):
         if age_to is not None:
             pets = pets.filter(age__lte=age_to)
     if "ids" in request.GET:
-        # BUG-03: ограничиваем длину числа и количество идентификаторов, иначе SQLite даёт OverflowError (500)
         ids = [
             int(i)
             for i in request.GET["ids"].split(",")[:200]
@@ -76,7 +74,6 @@ def _filter_pets(request):
         ]
         pets = pets.filter(pk__in=ids)
     if q:
-        # SQLite сравнивает кириллицу с учётом регистра, поэтому пробуем разные варианты написания
         variants = {q, q.lower(), q.upper(), q.capitalize()}
         condition = Q()
         for variant in variants:
@@ -187,7 +184,11 @@ def adopt(request, pk):
             with transaction.atomic():
                 application.save()
         except IntegrityError:
-            # BUG-02: двойная отправка формы — вторая заявка нарушает уникальность (пользователь, питомец)
+            logger.warning(
+                "Повторная заявка отклонена: пользователь=%s, питомец=%s",
+                request.user.username,
+                pet.pk,
+            )
             messages.info(request, "Вы уже подавали заявку на этого питомца.")
             return redirect("profile")
         logger.info(
@@ -252,7 +253,6 @@ def profile(request):
 @login_required
 @require_POST
 def application_cancel(request, pk):
-    # BUG-09: пользователь может отменить только свою заявку и только пока она на рассмотрении
     application = get_object_or_404(
         AdoptionApplication, pk=pk, user=request.user, status="pending"
     )
@@ -411,7 +411,6 @@ def staff_application(request, pk):
         messages.error(request, "Неизвестное действие.")
         return redirect("staff")
     try:
-        # Статус заявки и бронь питомца сохраняются вместе или не сохраняются совсем
         with transaction.atomic():
             application.save()
     except DatabaseError:

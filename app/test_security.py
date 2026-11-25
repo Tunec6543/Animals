@@ -3,7 +3,6 @@ import io
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, TestCase
 from django.urls import reverse
@@ -46,7 +45,9 @@ class SecurityChecks(TestCase):
     # 2. XSS
     def test_2_xss(self):
         self.client.force_login(self.anna)
-        self.client.post(reverse('profile_edit'), {'first_name': XSS, 'last_name': 'Т', 'email': 'anna@e.com'})
+        r = self.client.post(reverse('profile_edit'), {'first_name': XSS, 'last_name': 'Т', 'email': 'anna@e.com'})
+        self.assertContains(r, 'ФИО может содержать только буквы, пробел и дефис', msg_prefix='ввод отклонён валидацией')
+        User.objects.filter(pk=self.anna.pk).update(first_name=XSS)  # в обход формы: вывод всё равно экранируется
         html = self.client.get(reverse('profile')).content.decode()
         self.assertNotIn(XSS, html)
         self.assertIn('&lt;script&gt;alert(1)&lt;/script&gt;', html)
